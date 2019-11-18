@@ -53,7 +53,7 @@ function getCategories(){
     let dataJson = await response.json();
     let content = 'categoryId,parentId,categoryName,retailerId,hasChild,modifiedDate,createdDate,children'
     dataJson['data'].forEach(item => {
-      console.log(item,'test home pc');
+      console.log(item,'test git pull');
     })
   });
 }

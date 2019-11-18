@@ -1,9 +1,19 @@
 const fetch = require("node-fetch");
 const fs    = require("fs");
+const queryString = require('querystring');
 
 const folderGetData   = './getdata';
 const fileAccesstoken = folderGetData + '/accesstoken.txt';
+
 const fileCategories  = folderGetData + '/categories.csv';
+const fileProducts    = folderGetData + '/products.csv';
+const fileOrders      = folderGetData + '/orders.csv';
+const fileCustomers   = folderGetData + '/customers.csv';
+
+const urlApiCategories = 'https://public.kiotapi.com/categories?';
+const urlApiProducts   = 'https://public.kiotapi.com/products?';
+const urlApiOrders     = 'https://public.kiotapi.com/orders?';
+const urlApiCustomers  = 'https://public.kiotapi.com/customers?';
 
 async function getAccessToken(){
   const clientId     = '18325940-db11-4ac5-bb1e-bbcafe005ba6';
@@ -19,9 +29,9 @@ async function getAccessToken(){
   if(!fs.existsSync(folderGetData))
     fs.mkdirSync(folderGetData);
 
-  fs.writeFile(fileAccesstoken, JSON.stringify(dataJson), err => {
-    if(err) throw err;
-  });
+    fs.writeFile(fileAccesstoken, JSON.stringify(dataJson), err => {
+      if(err) throw err;
+    });
   return dataJson;
 }
 
@@ -48,33 +58,97 @@ function promiseReadfile(pathFile){
   });
 }
 
-function getCategories(){
-  readAccessTokenFile().then(async dataToken => {
-    const headers = {
-      'Authorization' : `${dataToken['token_type']} ${dataToken['access_token']}`,
-      'Retailer'      : 'moanashop',
-      'Cache-Control' : 'no-cache'
-    }
-    let response = await fetch('https://public.kiotapi.com/categories', {headers:headers});
-    let dataJson = await response.json();
+function getHeaderApi(dataToken){
+  return {
+    'Authorization' : `${dataToken['token_type']} ${dataToken['access_token']}`,
+    'Retailer'      : 'moanashop',
+    'Cache-Control' : 'no-cache'
+  }
+}
 
-    let content = 'categoryId,parentId,categoryName,retailerId,hasChild,modifiedDate,createdDate\n';
-
-    dataJson['data'].forEach(item => {
-      content += item.categoryId   ? item.categoryId   + ',' : ',';
-      content += item.parentId     ? item.parentId     + ',' : ',';
-      content += item.categoryName ? item.categoryName + ',' : ',';
-      content += item.retailerId   ? item.retailerId   + ',' : ',';
-      content += item.hasChild     ? item.hasChild     + ',' : ',';
-      content += item.modifiedDate ? item.modifiedDate + ',' : ',';
-      content += item.createdDate  ? item.createdDate  : '';
-      content += '\n';
+function getContentFromDataJson(titleHeaders, dataJson){
+  let contentFromDataJson = titleHeaders.toString().concat('\n');
+  
+  dataJson['data'].forEach(data => {
+    titleHeaders.forEach((item, index, arr) => {
+      if(index === arr.length - 1)
+        contentFromDataJson += data[item] ? `"${data[item]}"\n` : "\n";
+      else
+        contentFromDataJson += data[item] ? `"${data[item]}",` : ",";
     });
-    
-    fs.writeFile(fileCategories, content, err => {
+  });
+  return contentFromDataJson.trim();
+}
+
+function writeFile(fileName, content){
+    fs.writeFile(fileName, content, err => {
       if(err) throw err;
     });
+}
+
+function chainAction(urlApi, params, titleHeaders, writeFileName){
+  readAccessTokenFile().then(async dataToken => {
+    const headers = getHeaderApi(dataToken);
+
+    let response = await fetch(urlApi + params, {headers:headers});
+    let dataJson = await response.json();
+
+    let content = getContentFromDataJson(titleHeaders, dataJson);
+    writeFile(writeFileName, content);
   });
 }
 
-getCategories();
+function getCategories(){
+  const params = queryString.stringify({
+    // pageSize : 10
+  });
+  const titleHeaders = ['categoryId', 'parentId', 'categoryName', 
+                        'retailerId', 'hasChild', 'modifiedDate', 
+                        'createdDate'];
+                        
+  chainAction(urlApiCategories, params, titleHeaders, fileCategories);
+}
+
+function getProducts(){
+  const params = queryString.stringify({
+    // pageSize : 10
+  });
+  const titleHeaders = ['id', 'retailerId', 'code', 'name', 'fullname',
+                        'categoryId', 'categoryName', 'allowsSale', 'type',
+                        'hasVariants', 'basePrice', 'conversionValue', 'description', 
+                        'isActive', 'orderTemplate', 'isLotSerialControl', 'isBatchExpireControl', 
+                        'createdDate', 'modifiedDate'];
+                        
+  chainAction(urlApiProducts, params, titleHeaders, fileProducts);
+}
+
+function getOrders(){
+  const params = queryString.stringify({
+    // pageSize : 10
+  });
+  const titleHeaders = ['id', 'code', 'name', 'gender', 'birthDate',
+                        'contactNumber', 'address', 'retailerId', 'branchId',
+                        'locationName', 'email', 'type', 'organization', 
+                        'taxCode', 'comments', 'debt', 'rewardPoint', 
+                        'createdDate', 'modifiedDate'];
+                        
+  chainAction(urlApiOrders, params, titleHeaders, fileOrders);
+}
+
+function getCustomers(){
+  const params = queryString.stringify({
+    // pageSize : 10
+  });
+  const titleHeaders = ['id', 'code', 'name', 'gender', 'birthDate',
+                        'contactNumber', 'address', 'retailerId', 'branchId',
+                        'locationName', 'email', 'type', 'organization', 
+                        'taxCode', 'comments', 'debt', 'rewardPoint', 
+                        'createdDate', 'modifiedDate'];
+                        
+  chainAction(urlApiCustomers, params, titleHeaders, fileCustomers);
+}
+
+getCategories()
+getProducts()
+getOrders()
+getCustomers()

@@ -3,25 +3,26 @@ const fs    = require("fs");
 const queryString = require('querystring');
 
 const folderGetData   = './getdata';
-const fileAccesstoken = folderGetData + '/accesstoken.txt';
 
+const fileAccesstoken = folderGetData + '/accesstoken.txt';
 const fileCategories  = folderGetData + '/categories.csv';
 const fileProducts    = folderGetData + '/products.csv';
 const fileOrders      = folderGetData + '/orders.csv';
 const fileCustomers   = folderGetData + '/customers.csv';
 
-const urlApiCategories = 'https://public.kiotapi.com/categories?';
-const urlApiProducts   = 'https://public.kiotapi.com/products?';
-const urlApiOrders     = 'https://public.kiotapi.com/orders?';
-const urlApiCustomers  = 'https://public.kiotapi.com/customers?';
+const urlApiAccessToken = 'https://id.kiotviet.vn/connect/token';
+const urlApiCategories  = 'https://public.kiotapi.com/categories?';
+const urlApiProducts    = 'https://public.kiotapi.com/products?';
+const urlApiOrders      = 'https://public.kiotapi.com/orders?';
+const urlApiCustomers   = 'https://public.kiotapi.com/customers?';
 
 async function getAccessToken(){
   const clientId     = '18325940-db11-4ac5-bb1e-bbcafe005ba6';
   const clientSecret = '974FE7232C10209EA1A4A51F84FE9615864FC253';
   const headers      = { "Content-type": "application/x-www-form-urlencoded" }
-  const data = `scopes=PublicApi.Access&grant_type=client_credentials&client_id=${clientId}&client_secret=${clientSecret}`;
+  const data         = `scopes=PublicApi.Access&grant_type=client_credentials&client_id=${clientId}&client_secret=${clientSecret}`;
  
-  let response = await fetch('https://id.kiotviet.vn/connect/token', {method:"POST", headers:headers, body:data});
+  let response = await fetch(urlApiAccessToken, {method:"POST", headers:headers, body:data});
   let dataJson = await response.json();
 
   dataJson['expires_time'] = (Date.now() + 86000);
@@ -29,9 +30,9 @@ async function getAccessToken(){
   if(!fs.existsSync(folderGetData))
     fs.mkdirSync(folderGetData);
 
-    fs.writeFile(fileAccesstoken, JSON.stringify(dataJson), err => {
-      if(err) throw err;
-    });
+  fs.writeFile(fileAccesstoken, JSON.stringify(dataJson), err => {
+    if(err) throw err;
+  });
   return dataJson;
 }
 

@@ -16,11 +16,12 @@ const urlApiProducts    = 'https://public.kiotapi.com/products?';
 const urlApiOrders      = 'https://public.kiotapi.com/orders?';
 const urlApiCustomers   = 'https://public.kiotapi.com/customers?';
 
+const clientId     = '18325940-db11-4ac5-bb1e-bbcafe005ba6';
+const clientSecret = '974FE7232C10209EA1A4A51F84FE9615864FC253';
+
 async function getAccessToken(){
-  const clientId     = '18325940-db11-4ac5-bb1e-bbcafe005ba6';
-  const clientSecret = '974FE7232C10209EA1A4A51F84FE9615864FC253';
-  const headers      = { "Content-type": "application/x-www-form-urlencoded" }
-  const data         = `scopes=PublicApi.Access&grant_type=client_credentials&client_id=${clientId}&client_secret=${clientSecret}`;
+  const headers = { "Content-type": "application/x-www-form-urlencoded" }
+  const data    = `scopes=PublicApi.Access&grant_type=client_credentials&client_id=${clientId}&client_secret=${clientSecret}`;
  
   let response = await fetch(urlApiAccessToken, {method:"POST", headers:headers, body:data});
   let dataJson = await response.json();
